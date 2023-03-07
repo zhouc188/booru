@@ -1,0 +1,812 @@
+<h1>Modified Booru Downloader + Viewer (Fixed for rule34.xxx as of February 2022)</h1><p></p>
+ 
+<h3>Regarding this repost/fork of the original script by Se7en</h3>
+<p>I'm posting this because recently the script finally stopped working due to some sort of error that says "DOMException: The play() request was interrupted." I have no coding experience so I won't be maintaining this script. Feel free to take over as Se7en no longer maintains this script either and I don't have the expertise to. I fixed the issue(line 2873) by copying the code from a fix detailed in <a href="https://developers.google.com/web/updates/2017/06/play-request-was-interrupted">this article</a>. It was a very sloppy copy and paste and honestly I have no idea what it does so there's probably a better fix out there. I also changed the viewer to stretch all images to fit to screen and I have no idea how to change it back. It's on line 3956 if anyone wants to try and fix it. 
+ 
+<p><a href="">Here's a pastebin of this description if you want to add onto and repost this.</a></p>
+ 
+<h3>Short description</h3>
+<p>This script allows you to download/view images on the various imageboard sites. When download mode is enabled, make a simple click on the image thumbnail to start donwloading the image. Use Left/Right<sup>1</sup> hotkeys to navigate, when viewing images.<br><small> <sup>1</sup> use Ctrl+Left/Right on donmai.us imageboards, because the Left/Right hotkeys are attached to paginator</small><br>
+</p>
+<p>
+<b>
+List of  originally supported imageboards:</b>
+<br>
+gelbooru.com, rule34.xxx, yande.re, donmai.us (danbooru.donmai.us, sonohara.donmai.us, etc.), sankakucomplex.com (both sankaku: chan.sankakucomplex.com, idol.sankakucomplex.com), behoimi.org (3dbooru), youhate.us, safebooru.org, uberbooru.com, bronibooru.com, mspabooru.com, e926.net, e621.net, booru.org (all subdomains), atfbooru.ninja, lolibooru.moe, hypnohub.net, tbib.org, konachan.net, konachan.com, rule34.paheal.net<br>
+</p>
+<h3>
+Small glossary</h3>
+<p>
+</p>
+<ul>
+<li>
+image initialization – getting the original image's data (source link, tag list, etc.)</li>
+<li>
+empty image – the image that is tracked by the script, but not initialized</li>
+<li>
+busy image – the image that is in progress of the initialization</li>
+<li>
+ready image – the image that is initialized</li>
+</ul>
+<p>
+</p>
+<h3>
+Quick start</h3>
+<p>
+By default the script initializes all the available images on the start<sup>
+2</sup>
+. The initialized image is indicated by the yellow colored status bar on its bottom.<br>
+<small>
+ <sup>
+2</sup>
+ If some images aren't initialized, use Shift+I hotkey to complete initialization</small>
+<br>
+</p>
+<ul>
+<li>
+<b>
+Hotkeys</b>
+<ol>
+<li>
+<code>
+Shift+A</code>
+ - download all the ready (initialized) images</li>
+<li>
+<code>
+Shift+D</code>
+ - switch the Download Mode on/off</li>
+<li>
+<code>
+Shift+I</code>
+ - (re)initialize the images<br>
+<small>
+it is usefull for imageboards with auto paging, or when some images are not initialized due to an error 429 (too many requests)</small>
+</li>
+<li>
+<code>
+Shift+M</code>
+ - open/close the user menu window</li>
+<li>
+<code>
+Shift+V</code>
+ - open/close the viewer</li>
+<li>
+<code>
+Left/Right</code>
+ - view previous/next image<sup>
+1</sup>
+</li>
+</ol>
+</li>
+<li>
+<b>
+Image downloading</b>
+<ul>
+<li>
+In order to download the ready image, the Download Mode must be activated: use Shift+D hotkey, or press "Download Mode" button. Once the Download Mode is activated<sup>
+3</sup>
+, make a simple click on the image (thumbnail) to start the download. The downloading progress is indicated by the blue colored progress bar on the image's bottom. After the donwload is complete, the color of the image's status bar is changed to green.<br>
+</li>
+<li>
+One can also download the ready image by clicking on the "Download" button on the viewer's navigation bar.<br>
+</li>
+<li>
+To download all the ready images, use hotkey Shift+A, or press the "Download All" button. The amount of the ready images is visible on the button's name, e.i. 20 images are result in the name "Download All (20)", and if 4 images are downloaded, then the name is "Download All (4/20)".<br>
+</li>
+</ul>
+</li>
+<li>
+<b>
+Image viewing</b>
+<br>
+In order to open the viewer, use hotkey Shift+V, or press the "Viewer" button. By default, the first image is loaded on the first open. To start viewing, the image must be initialized. There are 3 ways to navigate when viewing:<ol>
+<li>
+<code>
+Left/Right</code>
+<sup>
+1</sup>
+ hotkeys</li>
+<li>
+a simple click on the thumbnails (right sidebar)<sup>
+4</sup>
+</li>
+<li>
+the "Prev"/"Next" buttons on the viewer's navigation bar (bottom)<sup>
+4</sup>
+</li>
+</ol>
+The tag list of the viewed image is shown on the left sidebar.<br>
+</li>
+</ul>
+<p>
+<small>
+ <sup>
+3</sup>
+ The enabled "Download Mode" button has suffix "[on]", disabled one - "[off]"</small>
+<br>
+<small>
+ <sup>
+4</sup>
+ The viewer's thumbnails and navigation bar are hidden, they fade in when the mouse cursor is over the right side/bottom of the viewer window</small>
+<br>
+</p>
+<ul>
+<li>
+You can download the image only once per page open - if the image is downloaded, the script sets its state as "downloaded", and that image is no more available for download, unless you refresh the site page.<br>
+</li>
+<li>
+When downloading large amount of images at a time (e.i. by clicking the "Download All (40)" button), it may cause the error 429 (too many requests), that results in stop of downloading. Wait a little, then try again (click the "Downalod All" button again) to resume downloading.<br>
+</li>
+</ul>
+<p>
+</p>
+<h3>
+Script configuration (user options)</h3>
+<p>
+This script uses GM.setValue/GM.getValue API to save/load the configuration data. The user interface is attached to the popup window (user options' window). To open/close the user interface press Shift+M, or click on the "User Menu" button. The cofiguration data (user options) is devided into 3 categories called "General", "Filename", and "Viewer":</p>
+<ul>
+<li>
+<b>
+General</b>
+ options:<ol>
+<li>
+<code>
+autoRun</code>
+ – initialize the images on start – [<code>
+true</code>
+]</li>
+<li>
+<code>
+createViewer</code>
+ – add image viewer to imageboard – [<code>
+true</code>
+]</li>
+<li>
+<code>
+downloadJPEG</code>
+ – download jpeg image (jpeg vs png on yande.re) – [<code>
+false</code>
+]<br>
+<small>
+on yande.re (and yande.re like) imageboards the highres images may have 2 versions with the same resolution: png (large filesize), and jpeg (smaller filesize), if so, the enabled <code>
+downloadJPEG</code>
+ option forces to download the jpeg image</small>
+</li>
+<li>
+<code>
+animateProgress</code>
+ – animate initialization/downloading progress – [<code>
+true</code>
+]<br>
+<small>
+this option enables, or disables the animation of the status/progress bar when the image initialization/downloading starts. Warning, the animation may increase CPU load</small>
+</li>
+</ol>
+</li>
+<li>
+<b>
+Filename</b>
+ options:<ol>
+<li>
+<code>
+maxTagsInName</code>
+ – maximum tags in file name – [<code>
+10</code>
+]<br>
+<small>
+the maximum amount of the tags that are added to the filename, it is limited by 100</small>
+<br>
+</li>
+<li>
+<code>
+tagsOrder</code>
+ – tags order in file name – [see defaults below]<br>
+<small>
+the ordered list of tag-types according to which the tags are added to the filename, default is ['character', 'copyright', 'artist', 'species', 'model', 'idol', 'photo_set', 'circle', 'medium', 'metadata', 'general', 'faults']</small>
+</li>
+<li>
+<code>
+ignoredTags</code>
+ – ignored tag names – []<br>
+<small>
+comma separated list of tag names that are skiped when making the filename</small>
+</li>
+<li>
+<code>
+tagsDelim</code>
+ – tags delimeter – ['<code>
+‒</code>
+']<br>
+<small>
+the delimeter of tag names in the filename, it is the character string limited by length 4</small>
+</li>
+<li>
+<code>
+addImgBrdName</code>
+ – add imageboard name to file name – [<code>
+true</code>
+]</li>
+<li>
+<code>
+prefixedName</code>
+ – prefixed names of imageboards – [<code>
+false</code>
+]<br>
+<small>
+when true, the long/prefixed name is used, otherwise – short name, e.i. chan.sankakucomplex.com has the prefixed/long name – 'chan.sankaku', and the short name - 'sankaku';</small>
+</li>
+<li>
+<code>
+imgIdAtNameEnd</code>
+ – image ID and imageboard name at file name end – [<code>
+true</code>
+]<br>
+<small>
+if true, then add the image ID, and the imageboard name to the filename end, otherwise – to the begin. The image ID is always added to the filename, and the imageboard name is always placed before the image ID</small>
+</li>
+</ol>
+</li>
+<li>
+<b>
+Viewer</b>
+ options:<ol>
+<li>
+<code>
+viewOriginal</code>
+ – view original images – [<code>
+false</code>
+]<br>
+<small>
+if true, then the original image is loaded when viewing, otherwise – the image sample</small>
+</li>
+<li>
+<code>
+viewJPEG</code>
+ – view jpeg image (yande.re option) – [<code>
+false</code>
+]<br>
+<small>
+if there is jpeg version of the original png image, and both (this one, and <code>
+viewOriginal</code>
+) options are true, then load the jpeg one</small>
+</li>
+<li>
+<code>
+viewFirst</code>
+ – load 1st image on viewer open – [<code>
+true</code>
+]<br>
+<small>
+the image is going to be viewed must be initialized, otherwise nothing happens</small>
+</li>
+<li>
+<code>
+holdCtrl</code>
+ – hold Ctrl key to left/right navigate when viewing – [<code>
+false</code>
+]</li>
+<li>
+<code>
+fixedTags</code>
+ – fix tag list – [<code>
+true</code>
+]</li>
+<li>
+<code>
+fixedThumbs</code>
+ – fix thumb list – [<code>
+false</code>
+]</li>
+<li>
+<code>
+showProgress</code>
+ – show progress/status bar – [<code>
+true</code>
+]<br>
+<small>
+show or hide status/progress bar on the viewer's thumbnails</small>
+</li>
+</ol>
+</li>
+</ul>
+<p>
+</p>
+<h3>
+Progress / status bar</h3>
+<p>
+There are 4 states<sup>
+5</sup>
+ of the image's status/progress bar:<br>
+</p>
+<ol>
+<li>
+ the empty image has the red colored status bar<br>
+</li>
+<li>
+ the ready image has the yellow colored status bar<br>
+</li>
+<li>
+ the image, that is in progress of downloading has the blue colored progress bar<br>
+</li>
+<li>
+ the downloaded image has the green status bar<br>
+</li>
+</ol>
+<p>
+<small>
+<sup>
+5</sup>
+ if the option <code>
+animateProgress</code>
+ is enabled, the busy image has the animated red status bar</small>
+<br>
+</p>
+<h3>
+Changelog</h3>
+<p>
+</p>
+<ul>
+<li>
+<b>
+v1.1.0.modified</b>
+<br>
++ new fork created due to Se7en no longer maintaining the script<br>
+* (line 2873) fix DOMException: The play() request was interrupted <a href="https://developers.google.com/web/updates/2017/06/play-request-was-interrupted">(Fix detailed in this article)</a><br>
+- (line 3956) kinda broke the viewer by forcing it to fit the image to the window, idk how to change it back<br>
+</li>
+<li>
+<b>
+v1.1.0</b>
+<br>
++ added "close" button to viewer's navigation bar<br>
+* fix userOptions loader (TamperMonkey bug?)<br>
+* fix redirect on gelbooru's favorite pages<br>
+* disable video preloader<br>
+</li>
+<li>
+<b>
+v1.0.1</b>
+<br>
+* fixed image preloader<br>
+</li>
+<li>
+<b>
+v1.0.0</b>
+<br>
++ user options:<ul>
+<li>
+ ignored tag names - []<br>
+</li>
+<li>
+ fixed tab list - [<code>
+true</code>
+]<br>
+</li>
+<li>
+ fixed thumb list - [<code>
+false</code>
+]<br>
+</li>
+<li>
+ view original images - [<code>
+false</code>
+]<br>
+<small>
+the old option <code>
+viewSample</code>
+ is replaced by the <code>
+viewOriginal</code>
+ keeping backward compatibility</small>
+<br>
+</li>
+</ul>
++ added tabs to user menu window:<ul>
+<li>
+General: autoRun, createViewer, downloadJPEG, animateProgress<br>
+</li>
+<li>
+Filename: maxTagsInName, tagsOrder, ignoredTags, tagsDelim, addImgBrdName, prefixedName, imgIdAtNameEnd<br>
+</li>
+<li>
+Viewer: viewOriginal, viewJPEG, viewFirst, holdCtrl, fixedThumbs, fixedTags<br>
+</li>
+</ul>
++ auto hide the viewer's navigation bar<br>
++ auto focus on the viewer's thumb/tag list when the mouse cursor is over them, thus, making much easier to start scrolling them<br>
++ image preloader<br>
+* changed the default value of the <code>
+holdCtrl</code>
+ option to [<code>
+false</code>
+]<br>
+* set controls, and loop attributes on the video elements<br>
+* restore browser history URL after viewer exit<ul>
+<small>
+this is sankaku hack: simply replaces the current history URL by the image's post URL to enable the valid image load</small>
+</ul>
+* hide main page scroll bar when viewer opened<br>
+* fixed viewer's 1st image thumbnail (post image thumb) on post page<br>
+* little refactoring (for further changes)<br>
+</li>
+<li>
+<b>
+v0.7.0</b>
+<br>
+* compatibility with Greasemonkey 4.0+<br>
+</li>
+<li>
+<b>
+v0.6.0</b>
+<br>
++ advanced viewer:<ul>
+<li>
+tag list on left sidebar<br>
+</li>
+<li>
+thumbnail list on right sidebar<br>
+</li>
+</ul>
+* removed user options: max width, max height<br>
+</li>
+<li>
+<b>
+v0.5.0</b>
+<br>
++ image status/progress bar<br>
++ user option:<ul>
+<li>
+animate initialization/downloading progress - [<code>
+true</code>
+]</li>
+</ul>
+* fix button events<br>
+</li>
+<li>
+<b>
+v0.4.2</b>
+<br>
++ hotkey:<ul>
+<li>
+<code>
+Shift+A</code>
+ - download all available images</li>
+</ul>
+* fix image source getter<br>
+</li>
+<li>
+<b>
+v0.4.1</b>
+<br>
+* fix exclude-list typo<br>
+* fix konachan jpeg images extension<br>
+</li>
+<li>
+<b>
+v0.4.0</b>
+<br>
++ added new portion of imageboards:<ul>
+<li>
+atfbooru<br>
+</li>
+<li>
+lolibooru<br>
+</li>
+<li>
+hypnohub<br>
+</li>
+<li>
+tbib<br>
+</li>
+<li>
+konachan<br>
+</li>
+<li>
+paheal<br>
+</li>
+</ul>
+* fix bug on post page due to empty viewer div<br>
+* rename 'rule34' to 'rule34.xxx'<br>
+</li>
+<li>
+<b>
+v0.3.2</b>
+<br>
++ user option:<ul>
+<li>
+ ordered list of tag-types in file name - [see default in file name options]</li>
+</ul>
+</li>
+<li>
+<b>
+v0.3.1</b>
+<br>
++ user options:<ul>
+<li>
+hold Ctrl key to left/right navigate when viewing - [<code>
+true</code>
+]<br>
+</li>
+<li>
+maximum width of image, px - [<code>
+1000</code>
+]<br>
+</li>
+<li>
+maximum height of image, px - [<code>
+700</code>
+]<br>
+</li>
+</ul>
+</li>
+<li>
+<b>
+v0.3.0</b>
+<br>
++ simple image viewer<br>
++ user options:<ul>
+<li>
+create image viewer - [<code>
+true</code>
+]<br>
+</li>
+<li>
+view image sample - [<code>
+true</code>
+]<br>
+</li>
+<li>
+view jpeg image (yande.re option) - [<code>
+false</code>
+]<br>
+</li>
+<li>
+view 1st image on viewer activation - [<code>
+true</code>
+]<br>
+</li>
+</ul>
++ hotkeys:<ul>
+<li>
+<code>
+Shift+V</code>
+ - switch viewer on/off<br>
+</li>
+<li>
+<code>
+Ctrl+Left/Right</code>
+ - view previous/next image<br>
+</li>
+</ul>
++ @connect meta-data - to silence tampermonkey<br>
+* fix wrong image hostname for uberbooru<br>
+</li>
+<li>
+<b>
+v0.2.7</b>
+<br>
+* scrollable content of user menu window<br>
+* user menu window's size fitted to client's size<br>
+* move user menu 'close' button to the top right of the menu window (X sign)<br>
+* other little changes<br>
+</li>
+<li>
+<b>
+v0.2.5</b>
+<br>
+* fix typos<br>
+</li>
+<li>
+<b>
+v0.2.4</b>
+<br>
++ user option:<ul>
+<li>
+image ID, and imageboard name at file name end [<code>
+true</code>
+]</li>
+</ul>
++ dynamically rename images on user options change<br>
+</li>
+<li>
+<b>
+v0.2.3</b>
+<br>
+* fix image extensions (on tampermonkey)<br>
+</li>
+<li>
+<b>
+v0.2.2</b>
+<br>
+* bugfixes<br>
+* little changes<br>
+</li>
+<li>
+<b>
+v0.2.0</b>
+<br>
++ new downloaders:<ul>
+<li>
+youhate.us<br>
+</li>
+<li>
+safebooru<br>
+</li>
+<li>
+uberbooru<br>
+</li>
+<li>
+bronibooru<br>
+</li>
+<li>
+mspabooru<br>
+</li>
+<li>
+e926.net / e621.net<br>
+</li>
+<li>
+booru.org</li>
+</ul>
++ user option:<ul>
+<li>
+prefixed imageboard name [<code>
+false</code>
+]</li>
+</ul>
+</li>
+<li>
+<b>
+v0.1.1</b>
+<br>
++ user option:<ul>
+<li>
+auto initialize the script on start [<code>
+true</code>
+]</li>
+</ul>
++ hotkey:<ul>
+<li>
+<code>
+Shift+M</code>
+ - open/close the user menu window</li>
+</ul>
++ little changes<br>
+</li>
+<li>
+<b>
+v0.1.0</b>
+<br>
++ user menu<br>
+</li>
+<li>
+<b>
+v0.0.13</b>
+<br>
+* refactoring<br>
+* fix button events<br>
+</li>
+<li>
+<b>
+v0.0.10</b>
+<br>
++ behoimi downloader<br>
+</li>
+<li>
+<b>
+v0.0.9</b>
+<br>
++ hotkey:<ul>
+<li>
+<code>
+Shift+I</code>
+ to (re)initialize the script (usefull for the imageboards with auto pagination)</li>
+</ul>
+* fix yande.re jpeg image extension<br>
+</li>
+<li>
+<b>
+v0.0.8</b>
+<br>
++ sankaku downloader:<ul>
+<li>
+chan.sankakucomplex.com</li>
+<li>
+idol.sankakucomplex.com</li>
+</ul>
+</li>
+<li>
+<b>
+v0.0.7</b>
+<br>
++ hotkey:<ul>
+<li>
+<code>
+Shift+D</code>
+ to toggle the download mode</li>
+</ul>
++ donmai downloader:<ul>
+<li>
+safebooru.donmai.us</li>
+<li>
+danbooru.donmai.us</li>
+<li>
+sonohara.donmai.us</li>
+<li>
+hijiribe.donmai.us</li>
+</ul>
+</li>
+<li>
+<b>
+v0.0.6</b>
+<br>
++ yande.re downloader<br>
++ user option:<ul>
+<li>
+download jpeg (instead of png) [<code>
+false</code>
+]</li>
+</ul>
+</li>
+<li>
+<b>
+v0.0.5</b>
+<br>
++ rule34 downloader<br>
++ user option:<ul>
+<li>
+add imageboard name to image name [<code>
+true</code>
+]</li>
+</ul>
+</li>
+<li>
+<b>
+v0.0.3</b>
+<br>
++ gelbooru downloader<br>
++ user options:<ul>
+<li>
+maximum tags in image name [<code>
+10</code>
+]<br>
+</li>
+<li>
+tags delimeter ['<code>
+‒</code>
+']<br>
+</li>
+</ul>
+</li>
+</ul>
+<p>
+</p>
+<p>
+<small>
+P.S. sorry for my bad English</small>
+</p>
+ 
+      <div class="user-screenshots">
+ 
+      <a href="/rails/active_storage/blobs/redirect/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBZ1VsIiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19--a4928a7b475f2db16bf89dc191db30e7ccd38da3/screen_101.jpg?locale=en">
+<img src="https://greasyfork.s3.us-east-2.amazonaws.com/7xvio1rf6h8b4p56uaz2du04mlve">
+</a>
+ 
+      <a href="/rails/active_storage/blobs/redirect/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBZ1lsIiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19--918e006bceb4ed514a3a42294e78f87edf5eefa2/screen_102.jpg?locale=en">
+<img src="https://greasyfork.s3.us-east-2.amazonaws.com/vio5hvi4biulzeynl1zek93qjtze">
+</a>
+ 
+      <a href="/rails/active_storage/blobs/redirect/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBZ2NsIiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19--9b86786ac9ec8e3c078e0a916bff6b2b72b8f40d/screen_103.jpg?locale=en">
+<img src="https://greasyfork.s3.us-east-2.amazonaws.com/irth37vym4pb7b7204f70z3ihies">
+</a>
+ 
+      <a href="/rails/active_storage/blobs/redirect/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBZ2dsIiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19--706bf4589b747251cdcfda0a59ef1da72ca1f0c6/screen_104.jpg?locale=en">
+<img src="https://greasyfork.s3.us-east-2.amazonaws.com/j1mack9cgqqnjlyk3nou2ngbt2pd">
+</a>
+ 
+      <a href="/rails/active_storage/blobs/redirect/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBZ2tsIiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19--f517e3eea57c7ce1d968ee3143f3fa7d1b7b0175/screen_105.jpg?locale=en">
+<img src="https://greasyfork.s3.us-east-2.amazonaws.com/wzktkc8zyeobpdt0wbchgo9f4q0r">
+</a>
+ 
+  </div>
+ 
+ 
+  </div>
